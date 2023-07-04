@@ -9,8 +9,11 @@
 
 ❖ Recordings: Alaa
 
+❖ Screen Share: Alaa, Nada E
+
 ### Dates
 ❖ Started: 20.06.23
+
 ❖ Ended: 15.07.23
 
 ####                               ✿ ✿ ✿ enjoy ✿ ✿ ✿
