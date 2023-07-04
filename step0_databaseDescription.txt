@@ -1,0 +1,10 @@
+Project One:
+Prepare an ER diagram for this social media according to the following description.
+Social media has several users. Each user has userId (special number, unique), username, password,
+full name, role (admin, member).
+The social media has a set of posts each post has a set of attributes postId (special number, unique),
+postName , postContent.
+Each post has a set of comments, each comment has commentId, commentContent.
+Each post must have one user and a user may have a group of posts.
+Each comment must have one user and a user may have a group of comments.
+Each comment must have one post and each post may have a group of comments.
