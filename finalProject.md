@@ -18,4 +18,4 @@
 
 ❖ Ended: 15.07.23
 
-####   Good Luck Group 2!! ✿ ✿ ✿
+####   Good Luck Group 2!! Inshaallah we will do great ✿ ✿ ✿
