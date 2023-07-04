@@ -6,6 +6,7 @@
 
 ### Delegation
 ❖ GitHub: Nada E, Nada A
+
 ❖ Recordings: Alaa
 
 ### Dates
