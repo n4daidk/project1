@@ -16,7 +16,7 @@ CREATE TABLE `user` (
   `user_ID` INT AUTO_INCREMENT NOT NULL,
   `full_Name` VARCHAR(255) NOT NULL,
   `username` VARCHAR(255) NOT NULL,
-  `role` VARCHAR(2) NOT NULL,
+  `role` INT(2) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
   CONSTRAINT `PRIMARY` PRIMARY KEY (`user_ID`)
 );
