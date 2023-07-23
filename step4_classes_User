@@ -1,0 +1,103 @@
+import sqlalchemy
+
+class user:
+    def __init__(self,db_url):
+        self.engine = sqlalchemy.create_engine(db_url)
+        self.meta= sqlalchemy.MetaData()
+        self.meta.reflect(self.engine)
+        self.connection= self.engine.connect()
+        self.currentrole=0
+        self.currentName=0
+
+    def login(self, username_login, password_login):
+        query= self.meta.tables["user"].select().where(self.meta.tables["user"].c.username==username_login , self.meta.tables["user"].c.password==password_login)
+        result= self.connection.execute(query).fetchall()
+        if (not result):
+            print("Username or password is wrong")
+            return False
+        else:
+            print("Login successsful")
+            return True
+
+    def getAllUsers(self):
+        query= self.meta.tables["user"].select()
+        result= self.connection.execute(query).fetchall()
+        return result
+
+    def getUser(self,getUser_id):
+        query= self.meta.tables["user"].select().where(self.meta.tables["user"].c['user_ID']== getUser_id)
+        user= self.connection.execute(query).fetchall()
+        return user
+
+    def getRole(self,getRoleusername,getRolepass):
+        query= self.meta.tables["user"].select().where(self.meta.tables["user"].c.username==getRoleusername , self.meta.tables["user"].c.password==getRolepass)
+        user= self.connection.execute(query).fetchall()
+        return user[0][3]
+    
+    def getName(self,getNameUsername,getNamePassword):
+        query = self.meta.tables["user"].select().where(self.meta.tables["user"].c["username"]==getNameUsername , self.meta.tables["user"].c["password"] ==getNamePassword)
+        user = self.connection.execute(query).fetchall()
+        return user[0][1]
+
+    def filterUser(self,filter=[]):
+        query= self.meta.tables["user"].select().where(*filter)
+        user= self.connection.execute(query).fetchall()
+        return user
+
+    def register(self,new_username ,new_fullname,new_password,new_role):
+        if(self.checkuser(new_username,new_password)):
+            query= self.meta.tables['user'].insert().values(username=new_username,full_Name=new_fullname,password=new_password,role=new_role)
+            result=self.connection.execute(query)
+            self.connection.commit()
+            if(result):
+                print("user registered")
+                return True
+
+            else:
+                print("user not registered")
+                return False
+
+    def checkuser(self,checkusername,checkpassword):
+        query= self.meta.tables['user'].select().where(self.meta.tables['user'].c['username']==checkusername, self.meta.tables['user'].c['password']==checkpassword)
+        result=self.connection.execute(query).fetchall()
+        if (not result):
+            print(" user not  exists")
+            return True
+        else:
+            print(" user exists")
+            return False
+        
+    def checkuserId(self,check_id):
+        query= self.meta.tables['user'].select().where(self.meta.tables['user'].c['user_ID']==check_id)
+        result=self.connection.execute(query).fetchall()
+        if (not result):
+            return False
+        else:
+            return True
+
+    def deleteUser(self,delete_id):
+        if(self.checkuserId(delete_id)):
+            query= self.meta.tables["user"].delete().where(self.meta.tables["user"].c['user_ID']==delete_id)
+            done=self.connection.execute(query)
+            self.connection.commit()
+            if(done):
+                print("User deleted")
+            else:
+                print("User not deleted")
+            
+    def updateUser(self,updateUser_Id,updatedData,TYPE):
+        if(self.checkuserId(updateUser_Id)):
+            query=self.meta.tables['user'].update().where(self.meta.tables['user'].c['user_ID']==updateUser_Id).values({TYPE : updatedData})
+            done=self.connection.execute(query)
+            self.connection.commit()
+            if(done):
+                print("User updated")
+            else:
+                print("User not updated")
+
+    def getUserIdByName_Password(self, get_username, get_password):
+        query = self.meta.tables["user"].select().where(self.meta.tables["user"].c["username"]==get_username , self.meta.tables["user"].c["password"] ==get_password)
+        result =self.connection.execute(query).fetchall()
+        return result[0][0]
+        
+        
