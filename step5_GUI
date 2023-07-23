@@ -1,0 +1,651 @@
+#Importing...
+import tkinter as tk
+from tkinter import ttk
+
+import connect
+import user as userFile
+import comment as commentFile
+import post as postFile 
+
+import urllib.request
+import re
+from PIL import Image, ImageTk
+
+#import aboutPage as aboutPageFile
+
+user= userFile.user(connect.db_url)
+comment = commentFile.comment(connect.db_url)
+post = postFile.post(connect.db_url)
+currentrole = user.currentrole
+mode = True
+
+like_state = "unliked"
+allPosts = post.getAllPosts()
+
+postDict = {}
+commentDict = {}
+
+global path
+path = r'c:\Users\lenovo\Desktop\UPDATEDpythonClasses'
+
+
+#Functions
+
+def checklogin():
+    name=name_var.get()
+    print (name)
+    password=pass_var.get()
+
+    if(name=="" or password==""):
+        loginNotFilledMessage()
+        print("function exited")
+        return
+    else:
+        if(user.login(name, password)):
+            user.currentrole=user.getRole(name, password)
+            user.currentName = user.getName(name,password)
+            print(user.currentName)
+            welcomeMessage()
+            if(user.currentrole==0):
+                adminPanelframe.tkraise()
+                adminButton.place(x=70,y=200)
+            else:
+                userframe.tkraise()
+                adminButton.place_forget()
+        
+        else:
+            appearMessage()
+            print("login fail.....")
+
+def deleteAllData():
+    nameEntry.delete(0,"end")
+    LoginPassword.delete(0, "end")
+
+    fullnameEntry.delete(0,"end")
+    usernameEntry.delete(0,"end")
+    RegisterPassword.delete(0,"end")
+    roleEntry.set("")
+
+def checkregister(name,fullname,pass1,role_var):
+        
+    usernameRegex = '^[A-Za-z]\\w{4,14}$'
+    userNameresult = re.match(usernameRegex, name.get())
+    passwordRegex = '^(?=.[a-z])(?=.[A-Z])(?=.\d)(?=.[@$!%#_?&])[A-Za-z\d@$!#%?&]{6,20}$'
+    passwordresult = re.match(passwordRegex, pass1.get())
+
+    if(name.get()=="" or fullname.get()=="" or pass1.get()=="" or role_var.get()==""):
+        registerNotFilledMessage()
+    elif(userNameresult == None):
+        print("username error!!!")
+        test=ttk.Label(Mainwin,text="Characters in Username between 5 and 15.\nOnly alphanumeric characters and/or underscores.\nFirst character should be alphabetic.",foreground="red", font=(12))
+        test.place(x=50,y=400)
+        #update Frame to display message
+        Mainwin.update()
+        test.after(2000,test.destroy())
+    elif(passwordresult == None):
+        print("password error")
+        test=ttk.Label(Mainwin,text="Password is minimum 8 characters.\nAt least one uppercase letter.\nAt least one lowercase letter.\nAt least one number.\nAt least one special character[#?!@$%^&*-]",foreground="red", font=(12))
+        test.place(x=80,y=370)
+        #update Frame to display message
+        Mainwin.update()
+        test.after(1500,test.destroy())
+
+    else:
+        user.currentName = user.getName(name,pass1)
+        welcomeMessage()
+        if(role_var.get() == "Admin"):
+            user.currentName = name.get()
+            if(user.register(name.get(),fullname.get(),pass1.get(),0)):
+                    currentrole=0
+                    adminPanelframe.tkraise()
+            else:
+                    appearRegisterMessage()
+                    print("register fail....")
+        elif(role_var.get() == "User"):
+            if(user.register(name.get(),fullname.get(),pass1.get(),1)):
+                currentrole=1
+                userframe.tkraise()
+            else:
+                    appearRegisterMessage()
+                    print("register fail....")
+        
+def appearMessage():
+     test=ttk.Label(Mainwin,text="Username or password is incorrect. Please try again.",foreground="red", font=(12))
+     test.place(x=25,y=140)
+     #update Frame to display message
+     Mainwin.update()
+     test.after(1000,test.destroy())
+
+def appearRegisterMessage():
+     test=ttk.Label(registerframe,text="User is already registered!",foreground="red", font=(17))
+     test.place(x=190,y=240)
+     #update Frame to display message
+     registerframe.update()
+     test.after(1000,test.destroy())
+
+def registerNotFilledMessage():
+     test=ttk.Label(Mainwin,text="All fields must be filled.",foreground="red", font=(17))
+     test.place(x=190,y=240)
+     #update Frame to display message
+     Mainwin.update()
+     test.after(1000,test.destroy())
+
+def loginNotFilledMessage():
+     test=ttk.Label(Mainwin,text="All fields must be filled.",foreground="red", font=(17))
+     test.place(x=190,y=140)
+     #update Frame to display message
+     Mainwin.update()
+     test.after(1000,test.destroy())
+
+def show_hidePassword(entrybox, passBtn):
+    if entrybox.cget('show') == '':
+        entrybox.config(show='*')
+        passBtn.config(image=open_eye)
+        return True
+    else:
+        entrybox.config(show='')
+        passBtn.config(image=close_eye)
+        return False
+
+        userframe.tkraise()   
+        
+def darkMode():
+     style.theme_use('awdark')
+
+     registerNowBtn.config(fg="steelblue",background="#33393b", activebackground="black",activeforeground="steelblue")
+     LoginNowbtn.config(fg="steelblue",background="#33393b", activebackground="black",activeforeground="steelblue")
+
+     accountLabel.config(fg="white",background="#33393b")
+     accountLabel2.config(fg="white",background="#33393b")
+
+     #postName.config(fg="white",background="#33393b")
+     #postUsername.config(fg="white",background="#33393b")
+     #postContent.config(fg="white",background="#33393b")
+
+     themeChanger.config(text="Light Mode")
+     themeChanger1.config(text="Light Mode")
+     themeChanger2.config(text="Light Mode")
+
+def lightMode():
+     style.theme_use('awlight')   
+     
+     registerNowBtn.config(fg="steelblue",background="#e8e8e7", activebackground="aliceblue",activeforeground="steelblue")
+     LoginNowbtn.config(fg="steelblue",background="#e8e8e7", activebackground="aliceblue",activeforeground="steelblue")
+
+     accountLabel.config(fg="black",background="#e8e8e7")
+     accountLabel2.config(fg="black",background="#e8e8e7")
+     
+     #postName.config(fg="black",background="#e8e8e7")
+     #postUsername.config(fg="black",background="#e8e8e7")
+     #postContent.config(fg="black",background="#e8e8e7")
+
+     themeChanger.config(text="Dark Mode")
+     themeChanger1.config(text="Dark Mode")
+     themeChanger2.config(text="Dark Mode")
+
+def changeTheme():
+     global mode
+     if(mode == True):
+        darkMode()
+        mode = False
+     else:
+        lightMode()
+        mode = True
+
+def removeRecord():
+    selected = adminPanel_table.selection()
+    if selected:
+        # a row is selected
+        x = selected[0]
+        adminPanel_table.delete(x)
+        user.deleteUser(x)
+
+def updateRecord():
+    # Get selected item to Edit
+   selected_item = adminPanel_table.selection()
+   if selected_item:
+        table_id = selected_item[0]
+        print(table_id)
+
+        editframe.tkraise()
+        displaySelectedItem(table_id)
+        #user.updateUser(y)
+
+def displaySelectedItem(id):
+    # clear entries
+    FullnameEdit.delete(0,"end")
+    UsernameEdit.delete(0,"end")
+    PasswordEdit.delete(0,"end")
+    roleEdit.delete(0,"end")
+
+    tableUser = user.getUser(id)[0]
+    if (tableUser[3] == 0):
+        roleEdit.set("User")
+    else:
+        roleEdit.set("Admin")
+
+    #print(tableUser[2])
+    FullnameEdit.insert(0, tableUser[1])
+    UsernameEdit.insert(0, tableUser[2])
+    PasswordEdit.insert(0, tableUser[4])
+    
+def userPosts():
+        post.checkuserId(11)
+        if True:
+                pass
+                #display all of the logged in user's posts
+                #getallpostsbyuser
+        
+        else:
+                print("No posts created... Create a new post now!")
+
+def saveNewRecord():
+        selected_item = adminPanel_table.selection()
+        tableUser = user.getUser(selected_item)[0]
+        print(tableUser)
+
+        if (roleEditVar.get() == "Admin"):
+                newRole_value = 0
+        else:
+                newRole_value = 1
+
+        user.updateUser(selected_item,fullnameEditVar.get() , "full_Name")
+        user.updateUser(selected_item,usernameEditVar.get() , "username")
+        user.updateUser(selected_item,newRole_value , "role")
+        user.updateUser(selected_item,PasswordEditVar.get() , "password")
+        adminPanel_table.delete(selected_item)
+        adminPanel_table.insert(parent="", index="end", iid= selected_item, values=(selected_item, fullnameEditVar.get(), usernameEditVar.get(), newRole_value, PasswordEditVar.get()))
+
+        adminPanelframe.tkraise()
+
+def createNewPost():
+        post_userID = user.getUserIdByName_Password(name_var.get(), pass_var.get())
+        post.createPost(newPostContentvar.get(), newPostnamevar.get(), post_userID, newPost_imgURL.get())
+        postframe.tkraise()
+
+def switchFrame(frameName):
+        name_var.set("")
+        pass_var.set("")
+        frameName.tkraise()
+
+def updateWelcomeText():
+        welcomeText = f"Welcome back {user.currentName}! We missed you :)"
+        welcomeMSG.config(text = welcomeText)
+
+def welcomeMessage():
+        updateWelcomeText()
+        userframe.tkraise() 
+
+def likeFunc(likeBtn):
+        global like_state
+        if (like_state == "unliked"):
+                likeBtn.config(image = likedIcon)
+                like_state = "liked"
+
+        elif(like_state == "liked"):
+                likeBtn.config(image = likeIcon)
+                like_state = "unliked"
+
+def showPosts():
+    global postDict
+    for i in range(len(allPosts)):
+        postDict["post"+str(i+1)] = allPosts[i]
+        #print(str(postDict["post"+str(i+1)][4]))
+        if(postDict["post"+str(i+1)][4]!= ""):
+    
+            urllib.request.urlretrieve( str(postDict["post"+str(i+1)][4]), f"{i}IMG.png")
+            imgg = Image.open(f"{i}IMG.png")
+            postIMG = ImageTk.PhotoImage(imgg)
+        
+            tk.Label(postframe, image= postIMG).place(x=85,y=80)
+            postUsername = ttk.Label(postframe, text="alaa_ahmad1234", font=("Helvetica",16), foreground= "black")
+            postUsername.place(x=125,y=43)
+        
+            postName = ttk.Label(postframe, text=postDict["post"+str(i+1)][2], font=("Helvetica",13, "bold"), foreground= "black")
+            postName.place(x=85, y=415)
+
+            postContent = ttk.Label(postframe, text=postDict["post"+str(i+1)][1], font=("Helvetica",13), foreground= "black",wraplength= 350)
+            postContent.place(x=85 ,y=440)
+
+            pfpIMG = ttk.Label(postframe,image = pfpIcon, font= ("georgia",15))
+            pfpIMG.place(x=80,y=37)
+        
+        else:
+            postUsername = tk.Label(postframe, text="alaa_ahmad1234", font=("Helvetica",16), fg= "black")
+            postUsername.place(x=125,y=43)
+
+            postName = tk.Label(postframe, text=postDict["post"+str(i+1)][2], font=("Helvetica",13, "bold"), fg= "black")
+            postName.place(x=85,y=415)
+
+            postContent = tk.Label(postframe, text=postDict["post"+str(i+1)][1], font=("Helvetica",13), fg= "black", wraplength= 350)
+            postContent.place(x=85,y=440)
+
+            pfpIMG = ttk.Label(postframe,image = pfpIcon, font= ("georgia",15))
+            pfpIMG.place(x=80,y=37)
+
+def showComments(postID):
+    global commentDict
+    allComments = comment.getAllCommentsInPost(postID)
+    ttk.Label(commentframe,text=f"{len(allComments)} Comments", font= ("georgia",11)).place(x=205,y=30)
+
+    for i in range(len(allComments)):
+        commentDict["comment"+str(i+1)] = allComments[i]
+        
+        locals()["commentUsername" + str(i)] = ttk.Label(commentframe, text="nadaidk__", font=("Helvetica",15, "bold"))
+        locals()["commentUsername" + str(i)].place(x=15,y=63*(i+1))
+        locals()["commentContent" + str(i)] = ttk.Label(commentframe, text=commentDict["comment"+str(i+1)][1], font=("Helvetica",14), wraplength= 350)
+        locals()["commentContent" + str(i)].place(x=15,y=90*(i+1))
+
+    print(commentDict)
+
+def logOut():
+    deleteAllData()
+    loginframe.tkraise()
+
+def createNewComment():
+    comment_userID = user.getUserIdByName_Password(name_var.get(), pass_var.get())
+    comment_postID = 2
+    comment.createComment(newComment_var.get(), comment_postID, comment_userID)
+    newcommentEntry.delete(0, "end")
+
+
+Mainwin = tk.Tk()
+Mainwin.geometry('500x500')
+Mainwin.resizable(0,0)
+Mainwin.title("Social Media GUI")
+
+Mainwin.columnconfigure(0,weight=1)
+Mainwin.rowconfigure(0,weight=1)
+
+#String Vars
+name_var = tk.StringVar()
+pass_var = tk.StringVar()
+
+fullname_var = tk.StringVar()
+role_var = tk.StringVar()
+
+fullnameEditVar = tk.StringVar()
+usernameEditVar = tk.StringVar()
+PasswordEditVar = tk.StringVar()
+roleEditVar = tk.StringVar()
+
+newPostContentvar = tk.StringVar()
+newPostnamevar = tk.StringVar()
+newPost_imgURL = tk.StringVar()
+
+newComment_var = tk.StringVar()
+
+
+#Themes
+style = ttk.Style(Mainwin)
+Mainwin.tk.call('source', r'c:\Users\lenovo\Desktop\awthemes-10.4.0\awlight.tcl')
+Mainwin.tk.call('source', r'c:\Users\lenovo\Desktop\awthemes-10.4.0\awdark.tcl')
+
+
+#CREATING PAGES FOR SOCIAL MEDIA GUI!!!
+
+
+pfpIcon = tk.PhotoImage(file=path+'\images\pfp.jpeg')
+
+#Post Frame:
+postframe=ttk.Frame(Mainwin, width = 500, height = 500)
+postframe.grid(column = 0, row = 0, sticky = "nsew")
+ttk.Label(postframe,text="Post", font= ("georgia",20,"bold")).place(x=220,y=0)
+showPosts()
+
+postScrollbar = tk.Scrollbar(postframe,orient="vertical")
+postScrollbar.pack(side="right")
+
+#Login Frame:
+loginframe=ttk.Frame(Mainwin)
+loginframe.grid(column=0,row=0,sticky="nsew")
+
+#Title:
+ttk.Label(loginframe,text="Login Page", font= ("georgia",20,"bold")).place(x=180,y=0)
+
+#Labels & Entryboxes:
+ttk.Label(loginframe,text="Username", font= ("georgia",15)).place(x=80,y=50)
+nameEntry = ttk.Entry(loginframe,textvariable=name_var, font= ("georgia",15))
+nameEntry.place(x= 180,y=50)
+
+ttk.Label(loginframe,text="Password", font= ("georgia",15)).place(x=80,y=100)
+LoginPassword = ttk.Entry(loginframe,textvariable=pass_var, font= ("georgia",15), show="*")
+LoginPassword.place(x=180,y=100)
+
+#Register Frame:
+registerframe=ttk.Frame(Mainwin)
+registerframe.grid(column=0,row=0,sticky="nsew")
+
+#Title:
+ttk.Label(registerframe,text="Register Page", font= ("georgia",20,"bold")).place(x=150,y=0)
+
+#Labels & Entryboxes:
+ttk.Label(registerframe,text="Full Name", font= ("georgia",15)).place(x=80,y=50)
+fullnameEntry = ttk.Entry(registerframe,textvariable=fullname_var, font= ("georgia",15))
+fullnameEntry.place(x= 180,y=50)
+
+ttk.Label(registerframe,text="Username", font= ("georgia",15)).place(x=80,y=100)
+usernameEntry = ttk.Entry(registerframe,textvariable=name_var, font= ("georgia",15))
+usernameEntry.place(x=180,y=100)
+
+ttk.Label(registerframe,text="Password", font=("georgia",15)).place(x=80, y=150)
+RegisterPassword = ttk.Entry(registerframe,textvariable= pass_var, font=("georgia",15), show="*")
+RegisterPassword.place(x=180,y=150)
+
+ttk.Label(registerframe,text="Role", font= ("georgia",15)).place(x=80, y=200)
+roleEntry = ttk.Combobox(registerframe,state="readonly",values=["Admin","User"], textvariable=role_var, font= ("georgia",15))
+roleEntry.place(x=180,y=200)
+
+#Edit Frame:
+editframe=ttk.Frame(Mainwin)
+editframe.grid(column=0,row=0,sticky="nsew")
+
+#Title:
+ttk.Label(editframe,text="Edit Page", font= ("georgia",20,"bold")).place(x=220,y=0)
+
+#Labels & Entryboxes:
+ttk.Label(editframe,text="Full Name", font= ("georgia",15)).place(x=80,y=50)
+FullnameEdit = ttk.Entry(editframe, font=("georgia",15), textvariable= fullnameEditVar)
+FullnameEdit.place(x= 180,y=50)
+
+ttk.Label(editframe,text="Username", font= ("georgia",15)).place(x=80,y=100)
+UsernameEdit = ttk.Entry(editframe, font= ("georgia",15), textvariable= usernameEditVar)
+UsernameEdit.place(x=180,y=100)
+
+ttk.Label(editframe,text="Password", font=("georgia",15)).place(x=80, y=150)
+PasswordEdit = ttk.Entry(editframe, font=("georgia",15), textvariable= PasswordEditVar)
+PasswordEdit.place(x=180,y=150)
+
+ttk.Label(editframe,text="Role", font= ("georgia",15)).place(x=80, y=200)
+roleEdit = ttk.Combobox(editframe,state="readonly",values=["Admin","User"], font= ("georgia",15), textvariable= roleEditVar)
+roleEdit.place(x=180,y=200)
+
+#User Frame:
+userframe=ttk.Frame(Mainwin)
+userframe.grid(column=0,row=0,sticky="nsew")
+#Title:
+ttk.Label(userframe,text="User", font= ("georgia",20,"bold")).place(x=220,y=0)
+
+#Labels & Entryboxes:
+welcomeMSG = ttk.Label(userframe,text= "", font= ("georgia",13,"bold"), wraplength= 350, justify = "center")
+welcomeMSG.place(x=100,y=40)
+
+#Comment Frame:
+commentframe=ttk.Frame(Mainwin)
+commentframe.grid(column=0,row=0,sticky="nsew")
+#Title:
+ttk.Label(commentframe,text="Comments", font= ("georgia",20,"bold")).place(x=180,y=0)
+
+#Labels & Entryboxes:
+showComments(2)
+newcommentEntry = ttk.Entry(commentframe,textvariable=newComment_var, font= ("georgia",19), width= 27)
+newcommentEntry.place(x=5,y=430)
+
+#Admin Panel Frame:
+adminPanelframe=ttk.Frame(Mainwin)
+adminPanelframe.grid(column=0,row=0,sticky="nsew")
+
+#Title:
+ttk.Label(adminPanelframe,text="Admin Panel", font= ("georgia",20,"bold")).place(x=170,y=10)
+
+#Creating Table:
+adminPanel_table = ttk.Treeview(adminPanelframe)
+
+#Linking to the database
+user1=userFile.user(connect.db_url)
+user1data = user1.meta.tables["user"].c.keys()
+adminPanel_table['columns']=list(user1data)
+adminPanel_table.column("#0", width=0,  stretch=tk.NO)
+adminPanel_table.heading("#0",text="")
+
+#Headings:
+for col in user1data:
+    adminPanel_table.column(col, width=90,  stretch=tk.YES)
+    adminPanel_table.heading(col,text=col)
+
+#Inserting Data:
+allusers = user.getAllUsers()
+for u in allusers:
+        adminPanel_table.insert(parent="", index="end", iid=u[0], values=list(u))
+
+
+#scrollbar
+tableScrollbar = ttk.Scrollbar(adminPanelframe,orient="vertical", command=adminPanel_table.yview)
+adminPanel_table.configure(yscrollcommand=tableScrollbar.set)  
+tableScrollbar.pack(side ='right', fill ='y')
+
+adminPanel_table.place(x=20, y=80)
+
+#Create Post Frame:
+createPostframe=ttk.Frame(Mainwin)
+createPostframe.grid(column=0,row=0,sticky="nsew")
+
+#Title:
+ttk.Label(createPostframe,text="Create Post", font= ("georgia",20,"bold")).place(x=180,y=0)
+
+#Labels & Entryboxes:
+ttk.Label(createPostframe,text="Post Title", font= ("georgia",15)).place(x=20,y=50)
+newPostTitle = ttk.Entry(createPostframe, font= ("georgia",15), textvariable= newPostnamevar)
+newPostTitle.place(x= 180,y=50)
+
+ttk.Label(createPostframe,text="Post Content", font= ("georgia",15)).place(x=20,y=100)
+newpostContent = ttk.Entry(createPostframe, font= ("georgia",15), textvariable= newPostContentvar)
+newpostContent.place(x=180,y=100)
+
+ttk.Label(createPostframe,text="Image (optional)", font=("georgia",15)).place(x=20, y=150)
+imgURLEntry = ttk.Entry(createPostframe, font=("georgia",15), textvariable= newPost_imgURL)
+imgURLEntry.place(x=180,y=150)
+
+
+#Creating Buttons:
+themeChanger = tk.Button(loginframe, text="Dark Mode",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=8, height=1, command = changeTheme)
+themeChanger.place(x=20,y=10)
+
+themeChanger1 = tk.Button(userframe, text="Dark Mode",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=8, height=1, command = changeTheme)
+themeChanger1.place(x=19,y=10)
+
+themeChanger2 = tk.Button(registerframe, text="Dark Mode",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=8, height=1, command = changeTheme)
+themeChanger2.place(x=20,y=11)
+
+#IMGs for buttons:
+close_eye = tk.PhotoImage(file=path+'\images\close-eye.png')
+open_eye = tk.PhotoImage(file=path+'\images\open-eye.png')
+
+commentIcon = tk.PhotoImage(file=path+'\images\comment-icon.png')
+likeIcon = tk.PhotoImage(file=path+'\images\like-icon.png')
+likedIcon = tk.PhotoImage(file=path+'\images\liked-icon.png')
+sendIcon = tk.PhotoImage(file=path+'\images\send-btn.png')
+deleteIcon = tk.PhotoImage(file=path+'\images\delete-btn.png')
+editIcon = tk.PhotoImage(file=path+'\images\edit-btn.png')
+#aboutPageFile.aboutPage(path+"\images\close-eye.png")
+
+#User Frame Buttons:
+tk.Button(userframe, text="Log Out",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=7, height=1,command=lambda: logOut()).place(x=420,y=10)
+
+adminButton = tk.Button(userframe,text="adminPanel",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command=adminPanelframe.tkraise)
+
+tk.Button(userframe,text="post",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command=postframe.tkraise).place(x=330,y=200)
+
+#Login Frame Buttons:
+loginBtn = tk.Button(loginframe,text="Login",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command=lambda : checklogin()).place(x=210,y=170)
+
+accountLabel2 = tk.Label(loginframe,text="Don't have an account?", fg="black",font=("georgia",12))
+accountLabel2.place(x=100,y=240)
+registerNowBtn = tk.Button(loginframe,text="Register Now!",fg="steelblue",background="whitesmoke",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",command=lambda: switchFrame(registerframe))
+registerNowBtn.place(x=270,y=240)
+
+Loginpassword_Btn = tk.Button(loginframe,image=open_eye)
+Loginpassword_Btn.place(x=435,y=100)
+Loginpassword_Btn.config( command = lambda: show_hidePassword(LoginPassword, Loginpassword_Btn))
+
+
+#Register Frame Buttons:
+tk.Button(registerframe,text="Register",fg="aliceblue",background="steelblue",activebackground="aliceblue",width=11, height=2,font=("georgia",10),bd=0,cursor="hand2",command=lambda : checkregister(name_var,fullname_var,pass_var,role_var)
+).place(x=210,y=270)
+
+accountLabel = tk.Label(registerframe,text="Already have an account?", fg="black",font=("georgia",12))
+accountLabel.place(x=100,y=320)
+LoginNowbtn = tk.Button(registerframe,text="Login Now!",fg="steelblue",background="whitesmoke",activebackground="aliceblue",activeforeground="steelblue",font=("georgia",12),bd=0,cursor="hand2",command= lambda: switchFrame(loginframe))
+LoginNowbtn.place(x=290,y=320)
+
+Registerpassword_Btn = tk.Button(registerframe,image=open_eye)
+Registerpassword_Btn.config( command = lambda: show_hidePassword(RegisterPassword, Registerpassword_Btn))
+Registerpassword_Btn.place(x=435,y=150)
+
+#Post Frame Buttons:
+tk.Button(postframe,text="<< Back",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=7, height=1, command=userframe.tkraise).place(x=10,y=10)
+
+tk.Button(postframe, image = commentIcon ,bd=0,cursor="hand2",command=commentframe.tkraise).place(x=130,y=385)
+
+postLike = tk.Button(postframe, image = likeIcon ,bd=0,cursor="hand2")
+postLike.place(x=90,y=385)
+postLike.config(command = lambda: likeFunc(postLike))
+
+newPostBtn = tk.Button(postframe,text="Create New Post",fg="aliceblue",background="steelblue",activebackground="aliceblue",width=13, height=1,font=("georgia",12),bd=0,cursor="hand2", command = createPostframe.tkraise)
+newPostBtn.place(x=370,y=10)
+
+deletePost_Btn = tk.Button(postframe,image=deleteIcon)
+deletePost_Btn.place(x=355,y=43)
+
+editPost_Btn = tk.Button(postframe,image=editIcon)
+editPost_Btn.place(x=320,y=43)
+
+#Comment Frame Buttons:
+tk.Button(commentframe,text="<< Back",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=7, height=1, command=postframe.tkraise).place(x=10,y=10)
+
+sendBtn = tk.Button(commentframe, image = sendIcon ,bd=0,cursor="hand2")
+sendBtn.place(x=440,y=420)
+sendBtn.config(command = lambda: createNewComment())
+
+commentLike = tk.Button(commentframe, image = likeIcon ,bd=0,cursor="hand2")
+commentLike.place(x=420,y= 95)
+commentLike.config(command = lambda: likeFunc(commentLike))
+
+COMMENTdeletePost_Btn = tk.Button(commentframe,image=deleteIcon)
+COMMENTdeletePost_Btn.place(x=155,y=56)
+
+COMMENTeditPost_Btn = tk.Button(commentframe,image=editIcon)
+COMMENTeditPost_Btn.place(x=120,y=56)
+
+#Admin Panel Frame Buttons:
+deleteBtn = tk.Button(adminPanelframe,text="Delete",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command= removeRecord).place(x=350,y=310)
+
+updateBtn = tk.Button(adminPanelframe,text="Edit",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command= updateRecord).place(x=20,y=310)
+
+tk.Button(adminPanelframe,text="<< Back",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=7, height=1, command = userframe.tkraise).place(x=10,y=10)
+
+#Edit Frame Buttons:
+tk.Button(editframe,text="Save",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = saveNewRecord).place(x=350,y=310)
+
+tk.Button(editframe,text="Cancel",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = adminPanelframe.tkraise).place(x=20,y=310)
+
+
+#Create Post Frame Buttons:
+tk.Button(createPostframe,text="Save",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = createNewPost).place(x=350,y=310)
+
+tk.Button(createPostframe,text="Cancel",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = postframe.tkraise).place(x=20,y=310)
+
+
+lightMode()
+loginframe.tkraise()
+Mainwin.mainloop()
