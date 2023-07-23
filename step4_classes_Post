@@ -1,0 +1,73 @@
+import sqlalchemy
+
+class post:
+    def __init__(self,db_url):
+      self.engine = sqlalchemy.create_engine(db_url)
+      self.meta= sqlalchemy.MetaData()
+      self.meta.reflect(self.engine)
+      self.connection= self.engine.connect()
+
+    def deletePost(self,deletePost_id):
+        if(self.checkPost(ideletePost_id)):
+            query= self.meta.tables["post"].delete().where(self.meta.tables["post"].c['post_ID']==deletePost_id)
+            done=self.connection.execute(query)
+            self.connection.commit()
+            print("Post deleted")
+            return True
+        else:
+                print("Post not deleted")
+                return False
+
+    def updatePost(self,updatePost_Id,updatedData,TYPE):
+            if(self.checkPost(updatePost_Id)):
+                query=self.meta.tables['post'].update().where(self.meta.tables['post'].c['post_ID']==updatePost_Id).values({TYPE : updatedData})
+                done=self.connection.execute(query)
+                self.connection.commit()
+                if(done):
+                    print("post updated")
+                else:
+                    print("post not updated")
+
+    def createPost(self,newpost_Content,newpost_Name,newuser_ID, imgURL):
+        query= self.meta.tables["post"].insert().values(post_Content=newpost_Content,user_ID=newuser_ID, post_Name=newpost_Name, img = imgURL)
+        done=self.connection.execute(query)
+        self.connection.commit()
+        if(done):
+            print("Post posted")
+            return True
+        else:
+            print("Post not posted")
+            return False    
+        
+    def checkPost(self,checkpost_ID):
+        query= self.meta.tables['post'].select().where(self.meta.tables['post'].c['post_ID']==checkpost_ID)                                            
+        result=self.connection.execute(query).fetchall()
+        if (not result):
+            return False
+        else:
+            return True
+
+    def getPost(self,getPost_id):
+        query= self.meta.tables["post"].select().where(self.meta.tables["post"].c['post_ID']== getPost_id)
+        post= self.connection.execute(query).fetchall()
+        return post
+
+    def getAllPostsByUser(self, userid):
+            query= self.meta.tables["comment"].select().where(self.meta.tables["post"].c['user_ID']==userid)
+            result= self.connection.execute(query).fetchall()
+            return result
+
+    def checkuserId(self,checkUserid):
+        query= self.meta.tables['post'].select().where(self.meta.tables['post'].c['user_ID']==checkUserid)
+        result=self.connection.execute(query).fetchall()
+        if (not result):
+            print(" user id didnt create any posts ")
+            return False
+        else:
+            print(" user id posted ")
+            return True
+   
+    def getAllPosts(self):
+        query= self.meta.tables["post"].select()
+        posts= self.connection.execute(query).fetchall()
+        return posts
