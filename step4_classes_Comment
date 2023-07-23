@@ -1,0 +1,91 @@
+import sqlalchemy
+
+class comment:
+    def __init__(self,db_url):
+        self.engine = sqlalchemy.create_engine(db_url)
+        self.meta= sqlalchemy.MetaData()
+        self.meta.reflect(self.engine)
+        self.connection= self.engine.connect()
+
+    def createComment(self,newcomment_Content,newpost_ID,newuser_ID):
+        query= self.meta.tables["comment"].insert().values(comment_Content=newcomment_Content,post_ID=newpost_ID,user_ID=newuser_ID)
+        done=self.connection.execute(query)
+        self.connection.commit()
+        if(done):
+            print("Comment posted")
+            return True
+        else:
+            print("Comment not posted")
+            return False
+     
+    def deleteComment(self,deleteComment_id):
+        if(self.checkCommentId(deleteComment_id)):
+            query= self.meta.tables["comment"].delete().where(self.meta.tables["comment"].c['comment_ID']==deleteComment_id)
+            done=self.connection.execute(query)
+            self.connection.commit()
+            if(done):
+                print("Comment deleted")
+                return True
+            else:
+                print("Comment not deleted")
+                return False
+        
+    def updateComment(self,updateComment_id,updateComment_Content):
+        if(self.checkCommentId(updateComment_id)):
+            query =self.meta.tables['comment'].update().where(self.meta.tables["comment"].c['comment_ID']==updateComment_id).values(comment_Content=updateComment_Content)
+            done=self.connection.execute(query)
+            self.connection.commit()
+            if(done):
+                print("Comment updated")
+                return True
+            else:
+                print('Comment not updated')
+                return False   
+
+    def getAllCommentsByUser(self, userid):
+        if(self.checkuserId(userid)):
+            query= self.meta.tables["comment"].select().where(self.meta.tables["comment"].c['user_ID']==userid)
+            result= self.connection.execute(query).fetchall()
+            return result
+
+    def getAllCommentsInPost(self, comment_postid):
+        if(self.checkpostId(comment_postid)):
+            query= self.meta.tables["comment"].select().where(self.meta.tables["comment"].c['post_ID']==comment_postid)
+            result= self.connection.execute(query).fetchall()
+            return result
+
+    def getComment(self,getComment_id):
+        if(self.checkCommentId(getComment_id)):
+            query= self.meta.tables["comment"].select().where(self.meta.tables["comment"].c['comment_ID']==getComment_id)
+            comment= self.connection.execute(query).fetchall()
+            return comment
+
+    def checkCommentId(self,checkCommentid):
+        query= self.meta.tables['comment'].select().where(self.meta.tables['comment'].c['comment_ID']==checkCommentid)
+        result=self.connection.execute(query).fetchall()
+        if (not result):
+            print(" comment id not  exists")
+            return False
+        else:
+            print(" comment id exists")
+            return True
+
+    def checkuserId(self,checkUserid):
+        query= self.meta.tables['comment'].select().where(self.meta.tables['comment'].c['user_ID']==checkUserid)
+        result=self.connection.execute(query).fetchall()
+        if (not result):
+            return False
+        else:
+            return True
+    
+    def checkpostId(self,checkPostid):
+        query= self.meta.tables['comment'].select().where(self.meta.tables['comment'].c['post_ID']==checkPostid)
+        result=self.connection.execute(query).fetchall()
+        if (not result):
+            print(" post id has no comments")
+            return False
+        else:
+            print(" post id has comments")
+            return True
+    
+    
