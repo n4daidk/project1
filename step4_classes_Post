@@ -8,7 +8,7 @@ class post:
       self.connection= self.engine.connect()
 
     def deletePost(self,deletePost_id):
-        if(self.checkPost(ideletePost_id)):
+        if(self.checkPost(deletePost_id)):
             query= self.meta.tables["post"].delete().where(self.meta.tables["post"].c['post_ID']==deletePost_id)
             done=self.connection.execute(query)
             self.connection.commit()
@@ -71,3 +71,4 @@ class post:
         query= self.meta.tables["post"].select()
         posts= self.connection.execute(query).fetchall()
         return posts
+
