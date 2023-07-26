@@ -258,14 +258,66 @@ def saveNewRecord():
 
         adminPanelframe.tkraise()
 
-def createNewPost():
+def createNewPost(lbldict, postVAR, iVAR):
         if(newPostContentvar.get() == "" or newPostnamevar.get() == ""):
             registerNotFilledMessage()
         else:
+            postVAR +=1
+            iVAR +=1
+            createPostList = []
+            post_username = user.getUsername(currentuser_ID)
+            
             post.createPost(newPostContentvar.get(), newPostnamevar.get(), currentuser_ID, newPost_imgURL.get())
+            postDict["post"+str(iVAR)] = post.getPost(postVAR)
+            #print(postDict)
+            if (newPost_imgURL.get() != ""):
+                urllib.request.urlretrieve(postDict["post"+str(iVAR)][4], f"{postVAR}IMG.png")
+                img = Image.open(f"{postVAR}IMG.png")
+                locals()["postIMG" + str(postVAR)] = ImageTk.PhotoImage(img)
+                
+                locals()["imgLabel" + str(postVAR)] = tk.Label(postframe2, image= locals()["postIMG" + str(postVAR)])
+                locals()["imgLabel" + str(postVAR)].grid(row =5*iVAR+2 , column = 1)
+                createPostList.append(locals()["imgLabel" + str(postVAR)])
+            
+            locals()["postUsername" + str(postVAR)] = ttk.Label(postframe2, text=post_username, font=("Helvetica",16))
+            locals()["postUsername" + str(postVAR)].grid(row =5*iVAR+1, column = 1, padx = (0,10))
+            createPostList.append(locals()["postUsername" + str(postVAR)])
+        
+            locals()["postName" + str(postVAR)] = ttk.Label(postframe2, text=newPostnamevar.get(), font=("Helvetica",13, "bold"))
+            locals()["postName" + str(postVAR)].grid(row = 5*iVAR+3,column = 1)
+            createPostList.append(locals()["postName" + str(postVAR)])
+
+            locals()["postContent" + str(postVAR)] = ttk.Label(postframe2, text=newPostContentvar.get() , font=("Helvetica",13),wraplength= 350)
+            locals()["postContent" + str(postVAR)].grid(row =5*iVAR+4, column =1, pady = (0, 10))
+            createPostList.append(locals()["postContent" + str(postVAR)])
+
+            locals()["pfpIMG" + str(postVAR)] = ttk.Label(postframe2,image = pfpIcon, font= ("georgia",15))
+            locals()["pfpIMG" + str(postVAR)].grid(row =5*iVAR+1, column =1, padx = (0,250) )
+            createPostList.append(locals()["pfpIMG" + str(postVAR)])
+        
+            #postId_showComments = postDict["post"+str(iVAR)][0]
+            locals()["commentBTN" + str(postVAR)] = tk.Button(postframe2, image = commentIcon ,bd=0,cursor="hand2",command= partial(showComments,postId_showComments))
+            locals()["commentBTN" + str(postVAR)].grid(row =5*iVAR+3, column =3 )
+            createPostList.append( locals()["commentBTN" + str(postVAR)])
+
+            locals()["postLike" + str(postVAR)] = tk.Button(postframe2, image = likeIcon ,bd=0,cursor="hand2")
+            locals()["postLike" + str(postVAR)].grid(row =5*iVAR+3, column =2 )
+            locals()["postLike" + str(postVAR)].config(command = partial(likeFunc,locals()["postLike" + str(postVAR)]))
+            createPostList.append(locals()["postLike" + str(postVAR)])
+
+            #print(postDict["post"+str(i)][3])
+            locals()["deletePost_Btn" + str(postVAR)] = tk.Button(postframe2,image=deleteIcon)
+            locals()["deletePost_Btn" + str(postVAR)].grid(row = iVAR+iVAR+2 , column = 3, pady = (10, 0))
+            locals()["deletePost_Btn" + str(postVAR)].config(command = partial(deletePost, "post"+str(iVAR), postVAR, lbldict))
+            createPostList.append(locals()["deletePost_Btn" + str(postVAR)])
+
+            locals()["editPost_Btn" + str(postVAR)] = tk.Button(postframe2,image=editIcon)
+            locals()["editPost_Btn" + str(postVAR)].grid(row = iVAR+iVAR+2 , column = 2, pady = (10, 0))            
+            locals()["editPost_Btn" + str(postVAR)].config(command = partial(editPost, "post"+str(iVAR)))
+            createPostList.append(locals()["editPost_Btn" + str(postVAR)])    
+
+            lbldict[postVAR] = createPostList
             postframe.tkraise()
-            postDict["post"+str(i+1)] = post.getPost(int(postDict["post"+str(i)][0])+1)
-            print(postDict)
 
 def switchFrame(frameName):
         name_var.set("")
@@ -295,7 +347,7 @@ def likeFunc(likeBtn):
 def showPosts():
     global postCanvas
     global postscrollbar
-    global i
+    global postframe2
     global postId_showComments
     postCanvas = tk.Canvas(postframe)
     postCanvas.pack(fill=tk.BOTH, expand=1, side = tk.LEFT)
@@ -362,7 +414,7 @@ def showPosts():
         postLabelsList.append(locals()["postLike" + str(list_Value)])
 
         if (postDict["post"+str(i)][3] == currentuser_ID):
-            print(postDict["post"+str(i)][3])
+            #print(postDict["post"+str(i)][3])
             locals()["deletePost_Btn" + str(list_Value)] = tk.Button(postframe2,image=deleteIcon)
             locals()["deletePost_Btn" + str(list_Value)].grid(row = i+i+2 , column = 3, pady = (10, 0))
             locals()["deletePost_Btn" + str(list_Value)].config(command = partial(deletePost, "post"+str(i), list_Value, postLabelsDict))
@@ -375,12 +427,16 @@ def showPosts():
 
         postLabelsDict[list_Value]=postLabelsList     
         tk.Button(editPostframe,text="Save",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = partial(saveUpdatedPost, list_Value, postLabelsDict, "post"+str(i))).place(x=350,y=310)
-   
+        
+        tk.Button(createPostframe,text="Save",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = partial(createNewPost, postLabelsDict, list_Value, i) ).place(x=350,y=310)
+
 def showComments(postID):
     global commentCanvas
     global commentscrollbar
     global newcommentEntry
     global commentframe2
+    global allCommentsNUM
+    global allComments
     allComments = comment.getAllCommentsInPost(postID)
     commentCanvas = tk.Canvas(commentframe)
     
@@ -402,10 +458,12 @@ def showComments(postID):
     tk.Button(commentframe2,text="<< Back",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=7, height=1, command= lambda: commentBackBtn()).grid(row = 0, column = 0)
 
     if allComments == None:
-        ttk.Label(commentframe2,text="No Comments... Add new comment now!", font= ("georgia",11)).grid(row = 1, column = 1)
+        allCommentsNUM = ttk.Label(commentframe2,text="No Comments... Add new comment now!", font= ("georgia",11))
+        allCommentsNUM.grid(row = 1, column = 1)
         return
     else:
-        ttk.Label(commentframe2,text=f"{len(allComments)} Comments", font= ("georgia",11)).grid(row = 1, column = 1)
+        allCommentsNUM = ttk.Label(commentframe2,text=f"{len(allComments)} Comments", font= ("georgia",11))
+        allCommentsNUM.grid(row = 1, column = 1)
     commentLabelsDict = {}
     for i, comment_Value1 in enumerate(allComments):
         commentLabelsList = []
@@ -443,7 +501,7 @@ def showComments(postID):
         
     sendBtn = tk.Button(commentframe2, image = sendIcon ,bd=0,cursor="hand2")
     sendBtn.grid(column = 3, row = i+i+15)
-    sendBtn.config(command = partial(createNewComment,comment_Value, commentLabelsList, i, commentLabelsDict))
+    sendBtn.config(command = lambda: createNewComment(comment_Value, commentLabelsList, i, commentLabelsDict))
         
     tk.Button(editCommentframe,text="Save",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = partial(saveUpdatedComment,comment_Value,commentLabelsDict)).place(x=350,y=310)
     
@@ -473,6 +531,9 @@ def commentDelete(commentKey, cmntVAR,commentList):
         lbl.destroy()
 
     del commentDict[commentKey]
+    Num = len(allComments)
+    cmntNum = Num -1
+    allCommentsNUM.config(text=f"{cmntNum} Comments")
     #commentLabelsList.append(locals()["commentUsername" + str(cmntVAR)])
     commentframe2.update()
     
@@ -487,7 +548,9 @@ def createNewComment(cmntVAR, commentList, iVAR, commentlblsDict):
         return
     
     else:
+        cmntVAR +=1
         iVAR += 1
+        print(iVAR, cmntVAR)
         commentUsername = user.getUsername(currentuser_ID)
 
         comment.createComment(newComment_var.get(), postId_showComments, currentuser_ID)
@@ -498,7 +561,7 @@ def createNewComment(cmntVAR, commentList, iVAR, commentlblsDict):
         locals()["commentUsername" + str(cmntVAR)].grid(row = iVAR+iVAR+2 , column = 1, padx = 5, pady = (10, 0))
         commentList.append(locals()["commentUsername" + str(cmntVAR)])
 
-        locals()["commentContent" + str(cmntVAR)] = ttk.Label(commentframe2, text=commentDict["comment"+str(iVAR)][1], font=("Helvetica",14), wraplength= 350)
+        locals()["commentContent" + str(cmntVAR)] = ttk.Label(commentframe2, text= newComment_var.get(), font=("Helvetica",14), wraplength= 350)
         locals()["commentContent" + str(cmntVAR)].grid(row = iVAR+iVAR+3 , column = 1, padx = 5, pady = (0, 10))
         commentList.append(locals()["commentContent" + str(cmntVAR)])
 
@@ -515,10 +578,9 @@ def createNewComment(cmntVAR, commentList, iVAR, commentlblsDict):
         locals()["editComment_Btn" + str(cmntVAR)] = tk.Button(commentframe2,image=editIcon)
         locals()["editComment_Btn" + str(cmntVAR)].grid(row = iVAR+iVAR+2 , column = 2, pady = (10, 0))            
         locals()["editComment_Btn" + str(cmntVAR)].config(command = partial(commentEdit, "comment"+str(iVAR), cmntVAR, commentlblsDict))
-        commentLabelsList.append(locals()["editComment_Btn" + str(cmntVAR)])
+        commentList.append(locals()["editComment_Btn" + str(cmntVAR)])
         
-        commentlblsDict[cmntVAR]=commentLabelsList
-
+        commentlblsDict[cmntVAR]=commentList
         newcommentEntry.delete(0, "end")
         commentframe2.update()
 
@@ -534,7 +596,7 @@ def deletePost( postKey,postVAR,postList):
 
 def editPost(postKey):
     editPostframe.tkraise()
-    print(postDict)
+    #print(postDict)
     editPostimg.insert(0, postDict[postKey][4])
     editPostName.insert(0, postDict[postKey][2])
     editPostContent.insert(0, postDict[postKey][1])
@@ -557,13 +619,24 @@ def saveUpdatedComment(cmntVAR,saveCmntbtn):
     print(editCommentContentVar.get())
     saveCmntbtn[cmntVAR][1].config(text = editCommentContentVar.get())
     comment.updateComment(cmntVAR, editCommentContentVar.get())
+    commentframe2.update()
     cancelComment()
 
 def saveUpdatedPost(postVAR,SavePostbtn, postKEY):
     #print(postKEY)
-    SavePostbtn[postVAR][2].config(text = editPostContentVar.get())
-    SavePostbtn[postVAR][1].config(text = editPostNameVar.get())
+    SavePostbtn["post" + str(postVAR)][2].config(text = editPostContentVar.get())
+    SavePostbtn["post" + str(postVAR)][1].config(text = editPostNameVar.get())
+    SavePostbtn["post" + str(postVAR)][4].config(text = editPostNameVar.get())
     post.updatePost(postVAR, editPostContentVar.get(), "post_Content")
+    post.updatePost(postVAR, editPostNameVar.get(), "post_Name")
+    post.updatePost(postVAR, editPostimgVar.get(), "img")
+
+    if (editPostimgVar.get() != ""):
+    
+        urllib.request.urlretrieve(postDict[postKEY][4], f"{postVAR}IMG.png")
+        img = Image.open(f"{postVAR}IMG.png")
+        locals()["postIMG" + str(postVAR)] = ImageTk.PhotoImage(img)
+            
     #print(postDict)
     postDict[postKEY] = [postVAR, editPostNameVar.get(), editPostContentVar.get(),editPostimgVar.get() ]
     #print(postDict)
@@ -866,7 +939,6 @@ tk.Button(editframe,text="Save",fg="aliceblue",background="steelblue",activeback
 tk.Button(editframe,text="Cancel",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = adminPanelframe.tkraise).place(x=20,y=310)
 
 #Create Post Frame Buttons:
-tk.Button(createPostframe,text="Save",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = createNewPost).place(x=350,y=310)
 
 tk.Button(createPostframe,text="Cancel",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = postframe.tkraise).place(x=20,y=310)
 
