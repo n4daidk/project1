@@ -100,4 +100,7 @@ class user:
         result =self.connection.execute(query).fetchall()
         return result[0][0]
         
-        
+    def getUsername(self,getUser_ID):
+        query= self.meta.tables["user"].select().where(self.meta.tables["user"].c['user_ID']== getUser_ID)
+        user= self.connection.execute(query).fetchall()
+        return user[0][2]
