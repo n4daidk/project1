@@ -77,7 +77,7 @@ def checkregister(name,fullname,pass1,role_var):
     global currentuser_ID
     usernameRegex = '^[A-Za-z]\\w{4,14}$'
     userNameresult = re.match(usernameRegex, name.get())
-    passwordRegex = "^(?=.[a-z])(?=.[A-Z])(?=.\d)(?=.[@$!%#?&])[A-Za-z\d@$!#%?&]{6,20}$"
+    passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%#?&])[A-Za-z\d@$!#%?&]{6,20}$"
     passwordresult = re.match(passwordRegex, pass1.get())
     
 
@@ -426,7 +426,8 @@ def showPosts():
             postLabelsList.append(locals()["editPost_Btn" + str(list_Value)])
 
         postLabelsDict[list_Value]=postLabelsList     
-        tk.Button(editPostframe,text="Save",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = partial(saveUpdatedPost, list_Value, postLabelsDict, "post"+str(i))).place(x=350,y=310)
+        saveEditPostBTN = tk.Button(editPostframe,text="Save",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = lambda: saveUpdatedPost(list_Value, postLabelsDict, "post"+str(i)))
+        saveEditPostBTN.place(x=350,y=310)
         
         tk.Button(createPostframe,text="Save",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = partial(createNewPost, postLabelsDict, list_Value, i) ).place(x=350,y=310)
 
@@ -624,13 +625,14 @@ def saveUpdatedComment(cmntVAR,saveCmntbtn):
 
 def saveUpdatedPost(postVAR,SavePostbtn, postKEY):
     #print(postKEY)
-    SavePostbtn["post" + str(postVAR)][2].config(text = editPostContentVar.get())
-    SavePostbtn["post" + str(postVAR)][1].config(text = editPostNameVar.get())
-    SavePostbtn["post" + str(postVAR)][4].config(text = editPostNameVar.get())
+    SavePostbtn[postVAR][1].config(text = editPostContentVar.get())
+    SavePostbtn[postVAR][2].config(text = editPostNameVar.get())
+    SavePostbtn[postVAR][4].config(text = editPostimgVar.get())
     post.updatePost(postVAR, editPostContentVar.get(), "post_Content")
     post.updatePost(postVAR, editPostNameVar.get(), "post_Name")
     post.updatePost(postVAR, editPostimgVar.get(), "img")
-
+    postDict[postKEY] = [postVAR, editPostNameVar.get(), editPostContentVar.get(),editPostimgVar.get() ]
+    
     if (editPostimgVar.get() != ""):
     
         urllib.request.urlretrieve(postDict[postKEY][4], f"{postVAR}IMG.png")
@@ -638,7 +640,6 @@ def saveUpdatedPost(postVAR,SavePostbtn, postKEY):
         locals()["postIMG" + str(postVAR)] = ImageTk.PhotoImage(img)
             
     #print(postDict)
-    postDict[postKEY] = [postVAR, editPostNameVar.get(), editPostContentVar.get(),editPostimgVar.get() ]
     #print(postDict)
     cancelPost()
 
@@ -947,7 +948,7 @@ tk.Button(createPostframe,text="Cancel",fg="aliceblue",background="steelblue",ac
 tk.Button(editPostframe,text="Cancel",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = cancelPost).place(x=20,y=310)
 
 #Edit Comment Frame Buttons:
-tk.Button(editCommentframe,text="Save",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = saveUpdatedComment).place(x=350,y=310)
+tk.Button(editCommentframe,text="Save",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = partial(saveUpdatedComment)).place(x=350,y=310)
 #, command = saveNewRecord
 tk.Button(editCommentframe,text="Cancel",fg="aliceblue",background="steelblue",activebackground="aliceblue",font=("georgia",12),activeforeground="steelblue",bd=0,cursor="hand2",width=11, height=2, command = cancelComment).place(x=20,y=310)
 
